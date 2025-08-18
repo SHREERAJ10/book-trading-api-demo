@@ -17,6 +17,16 @@ app.get("/books", async(req, res)=>{
     res.json(data);
 });
 
+app.get("/books/:id", async(req, res)=>{
+    const id = Number(req.params.id);
+    const bookData = await prisma.book.findUnique({
+        where: {
+            id:id
+        }
+    }); 
+    res.json(bookData);
+});
+
 app.listen(3000, ()=>{
     console.log("Server running on port 3000");
 });
