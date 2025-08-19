@@ -29,15 +29,20 @@ app.get("/books/id_:id", async(req, res)=>{
 
 app.post("/books/list", async(req,res)=>{
     const bookData = req.body;
-    await prisma.book.create({
-        data:{
-            name:bookData.name,
-            author:bookData.author,
-            quantity:bookData.quantity,
-            price:bookData.price
-        }
-    });
-    res.json({"Message":"Data successfully Added"});
+    if(bookData.quantity > 0){
+        await prisma.book.create({
+            data:{
+                name:bookData.name,
+                author:bookData.author,
+                quantity:bookData.quantity,
+                price:bookData.price
+            }
+        });
+        res.json({"Message":"Data successfully Added"});
+    }
+    else{
+        res.json({"Error":"Book Quantity must be greater than zero"});
+    }
 });
 
 app.put("/books/id_:id/buy",async(req,res)=>{
