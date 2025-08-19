@@ -54,31 +54,37 @@ app.put("/books/:id",async(req,res)=>{
         }
     });
 
-    const updatedBookData = await prisma.book.update({
-        where:{
-            id:bookId
-        },
-        data:{
-            quantity:bookToBuy.quantity-booksQuantity
-        }
-    });
-
-    if(updatedBookData.quantity == 0){
-        await prisma.book.delete({
+    if(booksQuantity <= bookToBuy.quantity){
+        const updatedBookData = await prisma.book.update({
             where:{
                 id:bookId
+            },
+            data:{
+                quantity:bookToBuy.quantity-booksQuantity
             }
-        })
-    }
-    res.json({
-        "Message":"Book Successfully Purchased",
-        "Book-Details":{
-            "title":bookToBuy.name,
-            "author":bookToBuy.author,
-            "price":bookToBuy.price,
-            "quantity":booksQuantity
+        });
+
+        if(updatedBookData.quantity == 0){
+            await prisma.book.delete({
+                where:{
+                    id:bookId
+                }
+            })
         }
-    });
+
+        res.json({
+            "Message":"Book Successfully Purchased",
+            "Book-Details":{
+                "title":bookToBuy.name,
+                "author":bookToBuy.author,
+                "price":bookToBuy.price,
+                "quantity":booksQuantity
+            }
+        });
+    }
+    else{
+        res.json({"Error":"Requested quantity exceeds stock"})
+    }
 });
 
 app.delete("/books/:id",async(req, res)=>{
