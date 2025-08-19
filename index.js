@@ -17,7 +17,7 @@ app.get("/books", async(req, res)=>{
     res.json(data);
 });
 
-app.get("/books/id_:id", async(req, res)=>{
+app.get("/books/:id", async(req, res)=>{
     const id = Number(req.params.id);
     const bookData = await prisma.book.findUnique({
         where: {
@@ -27,7 +27,7 @@ app.get("/books/id_:id", async(req, res)=>{
     res.json(bookData);
 });
 
-app.post("/books/list", async(req,res)=>{
+app.post("/books", async(req,res)=>{
     const bookData = req.body;
     if(bookData.quantity > 0){
         await prisma.book.create({
@@ -45,7 +45,7 @@ app.post("/books/list", async(req,res)=>{
     }
 });
 
-app.put("/books/id_:id/buy",async(req,res)=>{
+app.put("/books/:id",async(req,res)=>{
     const bookId = Number(req.params.id);
     const booksQuantity = Number(req.body.quantity);
     const bookToBuy = await prisma.book.findUnique({
@@ -79,6 +79,10 @@ app.put("/books/id_:id/buy",async(req,res)=>{
             "quantity":booksQuantity
         }
     });
+});
+
+app.delete("/books/:id",async(req, res)=>{
+
 });
 
 app.listen(3000, ()=>{
