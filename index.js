@@ -27,6 +27,19 @@ app.get("/books/:id", async(req, res)=>{
     res.json(bookData);
 });
 
+app.post("/books/list", async(req,res)=>{
+    const bookData = req.body;
+    await prisma.book.create({
+        data:{
+            name:bookData.name,
+            author:bookData.author,
+            quantity:bookData.quantity,
+            price:bookData.price
+        }
+    });
+    res.json({"Message":"Data successfully Added"});
+});
+
 app.listen(3000, ()=>{
     console.log("Server running on port 3000");
 });
