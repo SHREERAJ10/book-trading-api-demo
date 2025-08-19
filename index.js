@@ -31,7 +31,7 @@ app.get("/books", async (req, res) => {
 });
 
 app.get("/books/:id", async (req, res) => {
-    try{
+    try {
         const id = Number(req.params.id);
         const bookData = await prisma.book.findUnique({
             where: {
@@ -40,15 +40,14 @@ app.get("/books/:id", async (req, res) => {
         });
         res.json(bookData);
     }
-    catch (err){
+    catch (err) {
         res.status(500).json({ "Error": "server error" });
     }
 }
-
 );
 
 app.post("/books", async (req, res) => {
-    try{
+    try {
         const bookData = req.body;
         if (bookData.quantity > 0) {
             await prisma.book.create({
@@ -65,22 +64,22 @@ app.post("/books", async (req, res) => {
             res.json({ "Error": "Book Quantity must be greater than zero" });
         }
     }
-    catch (err){
+    catch (err) {
         res.status(500).json({ "Error": "server error" });
     }
 });
 
-app.put("/books/:id", async (req, res) => {
-    try{
+app.post("/books/:id/purchase", async (req, res) => {
+    try {
         const bookId = Number(req.params.id);
         const booksQuantity = Number(req.body.quantity);
-    
+
         const bookToBuy = await prisma.book.findUnique({
             where: {
                 id: bookId
             }
         });
-    
+
         if (booksQuantity <= bookToBuy.quantity) {
             const updatedBookData = await prisma.book.update({
                 where: {
@@ -90,7 +89,7 @@ app.put("/books/:id", async (req, res) => {
                     quantity: bookToBuy.quantity - booksQuantity
                 }
             });
-    
+
             if (updatedBookData.quantity == 0) {
                 await prisma.book.delete({
                     where: {
@@ -98,7 +97,7 @@ app.put("/books/:id", async (req, res) => {
                     }
                 })
             }
-    
+
             res.json({
                 "Message": "Book Successfully Purchased",
                 "Book-Details": {
@@ -113,15 +112,14 @@ app.put("/books/:id", async (req, res) => {
             res.json({ "Error": "Requested quantity exceeds stock" })
         }
     }
-    catch (err){
+    catch (err) {
         res.status(500).json({ "Error": "server error" });
     }
 }
 );
 
 app.delete("/books/:id", async (req, res) => {
-    try{
-
+    try {
         const bookId = Number(req.params.id);
         const deletedBook = await prisma.book.delete({
             where: {
@@ -130,7 +128,7 @@ app.delete("/books/:id", async (req, res) => {
         });
         res.json({ "Message": "Book Data Successfully Deleted!" });
     }
-    catch (err){
+    catch (err) {
         res.status(500).json({ "Error": "server error" });
     }
 }
