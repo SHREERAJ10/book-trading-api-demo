@@ -17,7 +17,7 @@ app.get("/books", async(req, res)=>{
     res.json(data);
 });
 
-app.get("/books/:id", async(req, res)=>{
+app.get("/books/id_:id", async(req, res)=>{
     const id = Number(req.params.id);
     const bookData = await prisma.book.findUnique({
         where: {
@@ -38,6 +38,42 @@ app.post("/books/list", async(req,res)=>{
         }
     });
     res.json({"Message":"Data successfully Added"});
+});
+
+app.put("/books/id_:id/buy",async(req,res)=>{
+    const bookId = Number(req.params.id);
+    const booksQuantity = Number(req.body.quantity);
+    const bookToBuy = await prisma.book.findUnique({
+        where:{
+            id:bookId
+        }
+    });
+
+    const updatedBookData = await prisma.book.update({
+        where:{
+            id:bookId
+        },
+        data:{
+            quantity:bookToBuy.quantity-booksQuantity
+        }
+    });
+
+    if(updatedBookData.quantity == 0){
+        await prisma.book.delete({
+            where:{
+                id:bookId
+            }
+        })
+    }
+    res.json({
+        "Message":"Book Successfully Purchased",
+        "Book-Details":{
+            "title":bookToBuy.name,
+            "author":bookToBuy.author,
+            "price":bookToBuy.price,
+            "quantity":booksQuantity
+        }
+    });
 });
 
 app.listen(3000, ()=>{
