@@ -32,6 +32,7 @@ app.get("/books", async (req, res) => {
         res.json(data);
     }
     catch (err) {
+        console.log(err);
         res.status(500).json({ "Error": "server error" });
     }
 });
@@ -53,6 +54,7 @@ app.get("/books/:id", async (req, res) => {
         }
     }
     catch (err) {
+        console.log(err);
         if (err instanceof ZodError) {
             res.status(400).json({ "Error": "invalid id: must be a positive integer!" });
         }
@@ -78,6 +80,7 @@ app.post("/books", async (req, res) => {
         res.json({ "Message": "Data successfully Added" });
     }
     catch (err) {
+        console.log(err);
         if (err instanceof ZodError) {
             res.status(400).json({ "Error": "invalid form of data!" });
         }
@@ -137,15 +140,46 @@ app.post("/books/:id/purchase", async (req, res) => {
         }
     }
     catch (err) {
+        console.log(err);
         if (err instanceof ZodError) {
-            res.status(400).json({ "Error": "invalid input" });
+            res.status(400).json({"success":false ,"error": "invalid input" });
         }
         else {
-            res.status(500).json({ "Error": "server error" });
+            res.status(500).json({"success":false ,"error": "server error" });
         }
     }
 }
 );
+
+app.put("/books/:id", async(req, res)=>{
+    try{
+        const bookId = Number(req.params.id);
+        await idFormat.parseAsync(bookId);
+        const updatedData = req.body;
+        await Schema.parseAsync(updatedData);
+        const updatedBookData = await prisma.book.update({
+            where:{
+                id: bookId
+            },
+            data:{
+                name: updatedData.name,
+                author: updatedData.author,
+                quantity: updatedData.quantity,
+                price: updatedData.price
+            }
+        });
+        res.status(200).json({"success":true, "message":"data updated successfully", "updatedData":updatedBookData});
+    }
+    catch (err){
+        console.log(err);
+        if(err instanceof ZodError){
+            res.status(400).json({"success":false,"error":"invalid form of data"})
+        }
+        else{
+            res.status(500).json({"success":false,"error":"server error"});
+        }
+    }
+});
 
 app.delete("/books/:id", async (req, res) => {
     try {
@@ -156,14 +190,15 @@ app.delete("/books/:id", async (req, res) => {
                 id: bookId
             }
         });
-        res.json({ "Message": "Book Data Successfully Deleted!", "Deleted-Book": deletedBook });
+        res.json({"success":true ,"message": "book data deleted successfully!", "deletedBook": deletedBook });
     }
     catch (err) {
+        console.log(err);
         if (err instanceof ZodError) {
-            res.status(400).json({ "Error": "invalid id: must be positive integer!" })
+            res.status(400).json({"success":false ,"error": "invalid id: must be positive integer!" })
         }
         else {
-            res.status(404).json({ "Error": "Record Not Found!" });
+            res.status(404).json({"success":false ,"error": "Record Not Found!" });
         }
     }
 }
