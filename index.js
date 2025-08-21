@@ -5,8 +5,8 @@ import { z, ZodError } from "zod";
 const Schema = z.object({
     name: z.string().max(60),
     author: z.string().min(3).max(30),
-    quantity: z.int().positive().max(100),
-    price: z.number().int().nonnegative()
+    quantity: z.number().int().positive().max(100),
+    price: z.number().nonnegative()
 });
 
 const quantityInputFormat = z.object({
@@ -33,7 +33,7 @@ app.get("/books", async (req, res) => {
     }
     catch (err) {
         console.log(err);
-        res.status(500).json({ "Error": "server error" });
+        res.status(500).json({"success":false , "error": "server error" });
     }
 });
 
@@ -50,16 +50,16 @@ app.get("/books/:id", async (req, res) => {
             res.json(bookData);
         }
         else {
-            res.status(404).json({ "Error": "data not found!" });
+            res.status(404).json({"success":false , "error": "data not found!" });
         }
     }
     catch (err) {
         console.log(err);
         if (err instanceof ZodError) {
-            res.status(400).json({ "Error": "invalid id: must be a positive integer!" });
+            res.status(400).json({"success":false , "error": "invalid id: must be a positive integer!" });
         }
         else {
-            res.status(500).json({ "Error": "server error" });
+            res.status(500).json({"success":false , "error": "server error" });
         }
     }
 }
@@ -77,15 +77,15 @@ app.post("/books", async (req, res) => {
                 price: bookData.price
             }
         });
-        res.json({ "Message": "Data successfully Added" });
+        res.status(201).json({"success":true , "message": "data successfully added!" });
     }
     catch (err) {
         console.log(err);
         if (err instanceof ZodError) {
-            res.status(400).json({ "Error": "invalid form of data!" });
+            res.status(400).json({"success":false , "error": "invalid form of data!" });
         }
         else {
-            res.status(500).json({ "Error": "server error" });
+            res.status(500).json({"success":false , "error": "server error" });
         }
     }
 });
@@ -121,9 +121,10 @@ app.post("/books/:id/purchase", async (req, res) => {
                     })
                 }
 
-                res.json({
-                    "Message": "Book Successfully Purchased",
-                    "Book-Details": {
+                res.status(200).json({
+                    "success":true,
+                    "message": "Book Successfully Purchased",
+                    "purchaseDetails": {
                         "title": bookToBuy.name,
                         "author": bookToBuy.author,
                         "price": bookToBuy.price,
@@ -132,11 +133,11 @@ app.post("/books/:id/purchase", async (req, res) => {
                 });
             }
             else {
-                res.status(400).json({ "Error": "Requested quantity exceeds stock" })
+                res.status(400).json({"success":false ,"error": "Requested quantity exceeds stock" })
             }
         }
         else {
-            res.status(404).json({ "Error": "Data not Found!" });
+            res.status(404).json({"success":false ,"error": "Data not Found!" });
         }
     }
     catch (err) {
@@ -190,7 +191,7 @@ app.delete("/books/:id", async (req, res) => {
                 id: bookId
             }
         });
-        res.json({"success":true ,"message": "book data deleted successfully!", "deletedBook": deletedBook });
+        res.status(200).json({"success":true ,"message": "book data deleted successfully!", "deletedBook": deletedBook });
     }
     catch (err) {
         console.log(err);
