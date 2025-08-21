@@ -40,13 +40,13 @@ app.get("/books", async (req, res) => {
 app.get("/books/:id", async (req, res) => {
     try {
         const id = Number(req.params.id);
-        await idFormat.parseAsync(id);
+        const bookId = await idFormat.parseAsync(id);
         const bookData = await prisma.book.findUnique({
             where: {
-                id: id
+                id: bookId
             }
         });
-        if (bookData != null) {
+        if (bookData != null) { //if book is available in the DB
             res.json(bookData);
         }
         else {
@@ -67,8 +67,8 @@ app.get("/books/:id", async (req, res) => {
 
 app.post("/books", async (req, res) => {
     try {
-        const bookData = req.body;
-        await Schema.parseAsync(bookData);
+        const data = req.body;
+        const bookData = await Schema.parseAsync(data);
         await prisma.book.create({
             data: {
                 name: bookData.name,
@@ -92,17 +92,17 @@ app.post("/books", async (req, res) => {
 
 app.post("/books/:id/purchase", async (req, res) => {
     try {
-        const bookId = Number(req.params.id);
-        await idFormat.parseAsync(bookId);
-        const booksQuantity = req.body;
-        await quantityInputFormat.parseAsync(booksQuantity);
+        const id = Number(req.params.id);
+        const bookId = await idFormat.parseAsync(id);
+        const quantityData = req.body;
+        const booksQuantity = await quantityInputFormat.parseAsync(quantityData);
         const bookToBuy = await prisma.book.findUnique({
             where: {
                 id: bookId
             }
         });
 
-        if (bookToBuy != null) {
+        if (bookToBuy != null) { //if book is available in DB
             if (booksQuantity.quantity <= bookToBuy.quantity) {
                 const updatedBookData = await prisma.book.update({
                     where: {
@@ -152,22 +152,18 @@ app.post("/books/:id/purchase", async (req, res) => {
 }
 );
 
-app.put("/books/:id", async(req, res)=>{
+app.patch("/books/:id", async(req, res)=>{
     try{
-        const bookId = Number(req.params.id);
-        await idFormat.parseAsync(bookId);
-        const updatedData = req.body;
-        await Schema.parseAsync(updatedData);
+        const id = Number(req.params.id);
+        const bookId = await idFormat.parseAsync(id);
+        const data = req.body;
+        const partialSchema = Schema.partial();
+        const updatedData = await partialSchema.parseAsync(data);
         const updatedBookData = await prisma.book.update({
             where:{
                 id: bookId
             },
-            data:{
-                name: updatedData.name,
-                author: updatedData.author,
-                quantity: updatedData.quantity,
-                price: updatedData.price
-            }
+            data:updatedData
         });
         res.status(200).json({"success":true, "message":"data updated successfully", "updatedData":updatedBookData});
     }
@@ -175,6 +171,9 @@ app.put("/books/:id", async(req, res)=>{
         console.log(err);
         if(err instanceof ZodError){
             res.status(400).json({"success":false,"error":"invalid form of data"})
+        }
+        else if(err.code == "P2025"){
+            res.status(404).json({"success":false,"error":"Record Not Found!"});
         }
         else{
             res.status(500).json({"success":false,"error":"server error"});
@@ -184,8 +183,8 @@ app.put("/books/:id", async(req, res)=>{
 
 app.delete("/books/:id", async (req, res) => {
     try {
-        const bookId = Number(req.params.id);
-        await idFormat.parseAsync(bookId);
+        const id = Number(req.params.id);
+        const bookId = await idFormat.parseAsync(id);
         const deletedBook = await prisma.book.delete({
             where: {
                 id: bookId
@@ -198,8 +197,11 @@ app.delete("/books/:id", async (req, res) => {
         if (err instanceof ZodError) {
             res.status(400).json({"success":false ,"error": "invalid id: must be positive integer!" })
         }
-        else {
+        else if(err.code == "P2025") {
             res.status(404).json({"success":false ,"error": "Record Not Found!" });
+        }
+        else{
+            res.status(500).json({"success":false ,"error": "server error" })
         }
     }
 }
