@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "public"."Book" ALTER COLUMN "price" SET DATA TYPE DOUBLE PRECISION;
